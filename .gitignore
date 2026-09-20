@@ -1,0 +1,23 @@
+# Ignore all bin and obj folders
+**/bin/
+**/obj/
+
+build.schema.json
+.nuke/temp
+**/appsettings.development.json
+/.idea
+
+pricing-service.sln.DotSettings.user
+/.vs
+
+# Verify
+*.received.*
+*.received/
+
+# Ignore all .vs folders
+**/.vs/
+
+# Include this specific appsettings file
+!/test/Adapters/Pricing.Service.Adapters.External.GoogleCloud.Tests.Integration/appsettings.development.json
+!/src/Pricing.Service.Functions.PriceRun.Sync/appsettings.development.json
+!/src/Pricing.Service.Functions.ProductPrice.Publisher/appsettings.development.json
