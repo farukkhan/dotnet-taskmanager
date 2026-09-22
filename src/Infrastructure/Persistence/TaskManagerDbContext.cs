@@ -20,6 +20,7 @@ internal class TaskManagerDbContext : DbContext
             entity.Property(e => e.IsCompleted).IsRequired();
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired(false);
+            entity.Property(e=> e.Version).IsRequired().IsConcurrencyToken();
         });
     }
 }

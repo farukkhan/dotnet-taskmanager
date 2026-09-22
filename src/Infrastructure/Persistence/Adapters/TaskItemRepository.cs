@@ -1,9 +1,9 @@
-﻿using Application.Ports;
+﻿using Application.Exceptions;
+using Application.Ports;
 using Domain.Models;
 using Infrastructure.Persistence.Mappers;
 using Infrastructure.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
-
 
 namespace Infrastructure.Persistence.Adapters;
 
@@ -24,7 +24,8 @@ internal class TaskItemRepository : ITaskItemRepository
             Description = taskItem.Description,
             IsCompleted = taskItem.IsCompleted,
             CreatedAt = taskItem.CreatedAt,
-            UpdatedAt = taskItem.UpdatedAt
+            UpdatedAt = taskItem.UpdatedAt,
+            Version = taskItem.Version,
         };
 
         await _taskManagerDbContext.TaskItemEntities.AddAsync(taskItemEntity);
@@ -33,28 +34,71 @@ internal class TaskItemRepository : ITaskItemRepository
         return TaskItemMapper.ToDomain(taskItemEntity);
     }
 
-    public async Task<IReadOnlyList<TaskItem>> GetAllAsync()
+    public async Task DeleteByIdAsync(int id)
     {
-        return await _taskManagerDbContext.TaskItemEntities.Select(taskItemEntity =>
-        TaskItemMapper.ToDomain(taskItemEntity)).AsNoTracking().ToListAsync();
+        var rowsAffected = await _taskManagerDbContext.TaskItemEntities.Where(t => t.Id == id).ExecuteDeleteAsync();
+
+        if (rowsAffected == 0)
+        {
+            throw new NotFoundException(
+            $"Task with Id {id} was not found.");
+        }
     }
 
-    public async Task<TaskItem?> GetByIdAsync(int id)
+    public async Task<IReadOnlyList<TaskItem>> GetAllAsync(CancellationToken cancellationToken)
     {
-        var taskItemEntity = await _taskManagerDbContext.TaskItemEntities.AsNoTracking().FirstOrDefaultAsync(task => task.Id == id);
+        return await _taskManagerDbContext.TaskItemEntities.Select(taskItemEntity =>
+        TaskItemMapper.ToDomain(taskItemEntity)).AsNoTracking().ToListAsync(cancellationToken);
+    }
+
+    public async Task<TaskItem?> GetByIdAsync(int id, CancellationToken cancellationToken)
+    {
+        var taskItemEntity = await _taskManagerDbContext.TaskItemEntities.AsNoTracking().FirstOrDefaultAsync(task => task.Id == id, cancellationToken);
 
         return taskItemEntity is not null ? taskItemEntity.ToDomain() : null;
     }
 
-    public async Task UpdateAsync(TaskItem taskItem)
+    public async Task<TaskItem> UpdateAsync(TaskItem taskItem)
     {
-        var taskItemEntity = taskItem.ToEntity();
+        var taskItemEntity = await _taskManagerDbContext.TaskItemEntities
+            .Where(t => t.Id == taskItem.Id).SingleOrDefaultAsync();
 
-        await _taskManagerDbContext.TaskItemEntities.Where(taskEntity => taskEntity.Id == taskItem.Id)
-            .ExecuteUpdateAsync(te => te.SetProperty(t => t.Title, taskItem.Title)
-            .SetProperty(t => t.Description, taskItem.Description)
-            .SetProperty(t => t.IsCompleted, taskItem.IsCompleted)
-            .SetProperty(t => t.CreatedAt, taskItem.CreatedAt)
-            .SetProperty(t => t.UpdatedAt, taskItem.UpdatedAt));
+        if (taskItemEntity is null)
+        {
+            throw new NotFoundException(
+            $"Task with Id {taskItem.Id} was not found.");
+        }
+
+        if(taskItemEntity.Version != taskItem.Version)
+        {
+            throw new ConcurrencyException(
+           $"Task with Id {taskItem.Id} was modified by another user.");
+        }
+
+        taskItemEntity.Title = taskItem.Title;
+        taskItemEntity.Description = taskItem.Description;
+        taskItemEntity.IsCompleted = taskItem.IsCompleted;
+        taskItemEntity.UpdatedAt = taskItem.UpdatedAt;
+        taskItemEntity.Version = taskItem.Version + 1;
+
+        try
+        {
+            await _taskManagerDbContext.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new ConcurrencyException(
+            $"Task with Id {taskItem.Id} was modified by another user.");
+        }
+
+        return taskItemEntity.ToDomain();
+
+
+        //await _taskManagerDbContext.TaskItemEntities.Where(taskEntity => taskEntity.Id == taskItem.Id)
+        //    .ExecuteUpdateAsync(te => te.SetProperty(t => t.Title, taskItem.Title)
+        //    .SetProperty(t => t.Description, taskItem.Description)
+        //    .SetProperty(t => t.IsCompleted, taskItem.IsCompleted)
+        //    .SetProperty(t => t.CreatedAt, taskItem.CreatedAt)
+        //    .SetProperty(t => t.UpdatedAt, taskItem.UpdatedAt));
     }
 }

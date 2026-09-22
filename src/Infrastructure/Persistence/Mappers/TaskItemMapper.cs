@@ -8,7 +8,7 @@ internal static class TaskItemMapper
     public static TaskItem ToDomain(this TaskItemEntity taskItemEntity)
     {
         return TaskItem.Load(taskItemEntity.Id, taskItemEntity.Title,
-            taskItemEntity.Description, taskItemEntity.IsCompleted, taskItemEntity.CreatedAt, taskItemEntity.UpdatedAt);
+            taskItemEntity.Description, taskItemEntity.IsCompleted, taskItemEntity.CreatedAt, taskItemEntity.UpdatedAt, taskItemEntity.Version);
     }
 
     public static TaskItemEntity ToEntity(this TaskItem taskItem)
@@ -20,7 +20,8 @@ internal static class TaskItemMapper
             Description = taskItem.Description,
             IsCompleted = taskItem.IsCompleted,
             CreatedAt = taskItem.CreatedAt,
-            UpdatedAt = taskItem.UpdatedAt
+            UpdatedAt = taskItem.UpdatedAt,
+            Version = taskItem.Version
         };
     }
 }

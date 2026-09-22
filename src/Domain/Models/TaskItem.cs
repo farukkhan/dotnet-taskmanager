@@ -11,9 +11,10 @@ public class TaskItem
         Description = description;
 
         CreatedAt = DateTime.UtcNow;
+        Version = 1;
     }
 
-    private TaskItem(int id, string title, string? description, bool isCompleted, DateTime createdAt, DateTime? updatedAt)
+    private TaskItem(int id, string title, string? description, bool isCompleted, DateTime createdAt, DateTime? updatedAt, int version)
     {
         Id= id;
 
@@ -26,11 +27,12 @@ public class TaskItem
         IsCompleted = isCompleted;
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
+        Version = version;
     }
 
-    public static TaskItem Load(int id, string title, string? description, bool isCompleted, DateTime createdAt, DateTime? updatedAt)
+    public static TaskItem Load(int id, string title, string? description, bool isCompleted, DateTime createdAt, DateTime? updatedAt,int version)
     {
-        return new TaskItem(id, title, description, isCompleted, createdAt, updatedAt);
+        return new TaskItem(id, title, description, isCompleted, createdAt, updatedAt, version);
     }
 
     public int Id { get; private set; }
@@ -39,6 +41,7 @@ public class TaskItem
     public bool IsCompleted { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
+    public int Version { get; private set; }
 
     public void UpdateTitle(string title)
     {
