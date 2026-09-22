@@ -13,10 +13,10 @@ internal class TaskItemRepository : ITaskItemRepository
 
     public TaskItemRepository(TaskManagerDbContext taskManagerDbContext)
     {
-        _taskManagerDbContext = taskManagerDbContext;        
+        _taskManagerDbContext = taskManagerDbContext;
     }
 
-    public async Task<TaskItem> CreateAsync(TaskItem taskItem)
+    public async Task<TaskItem> CreateAsync(TaskItem taskItem, CancellationToken cancellationToken)
     {
         var taskItemEntity = new TaskItemEntity()
         {
@@ -28,15 +28,15 @@ internal class TaskItemRepository : ITaskItemRepository
             Version = taskItem.Version,
         };
 
-        await _taskManagerDbContext.TaskItemEntities.AddAsync(taskItemEntity);
-        await _taskManagerDbContext.SaveChangesAsync();
+        await _taskManagerDbContext.TaskItemEntities.AddAsync(taskItemEntity, cancellationToken);
+        await _taskManagerDbContext.SaveChangesAsync(cancellationToken);
 
         return TaskItemMapper.ToDomain(taskItemEntity);
     }
 
-    public async Task DeleteByIdAsync(int id)
+    public async Task DeleteByIdAsync(int id, CancellationToken cancellationToken)
     {
-        var rowsAffected = await _taskManagerDbContext.TaskItemEntities.Where(t => t.Id == id).ExecuteDeleteAsync();
+        var rowsAffected = await _taskManagerDbContext.TaskItemEntities.Where(t => t.Id == id).ExecuteDeleteAsync(cancellationToken);
 
         if (rowsAffected == 0)
         {
@@ -58,10 +58,10 @@ internal class TaskItemRepository : ITaskItemRepository
         return taskItemEntity is not null ? taskItemEntity.ToDomain() : null;
     }
 
-    public async Task<TaskItem> UpdateAsync(TaskItem taskItem)
+    public async Task<TaskItem> UpdateAsync(TaskItem taskItem, CancellationToken cancellationToken)
     {
         var taskItemEntity = await _taskManagerDbContext.TaskItemEntities
-            .Where(t => t.Id == taskItem.Id).SingleOrDefaultAsync();
+            .Where(t => t.Id == taskItem.Id).SingleOrDefaultAsync(cancellationToken);
 
         if (taskItemEntity is null)
         {
@@ -69,7 +69,7 @@ internal class TaskItemRepository : ITaskItemRepository
             $"Task with Id {taskItem.Id} was not found.");
         }
 
-        if(taskItemEntity.Version != taskItem.Version)
+        if (taskItemEntity.Version != taskItem.Version)
         {
             throw new ConcurrencyException(
            $"Task with Id {taskItem.Id} was modified by another user.");
@@ -77,13 +77,11 @@ internal class TaskItemRepository : ITaskItemRepository
 
         taskItemEntity.Title = taskItem.Title;
         taskItemEntity.Description = taskItem.Description;
-        taskItemEntity.IsCompleted = taskItem.IsCompleted;
-        taskItemEntity.UpdatedAt = taskItem.UpdatedAt;
-        taskItemEntity.Version = taskItem.Version + 1;
+        taskItemEntity.Version++;
 
         try
         {
-            await _taskManagerDbContext.SaveChangesAsync();
+            await _taskManagerDbContext.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException)
         {

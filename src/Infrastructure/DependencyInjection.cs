@@ -1,4 +1,6 @@
-﻿using Infrastructure.Persistence;
+﻿using Application.Ports;
+using Infrastructure.Persistence;
+using Infrastructure.Persistence.Adapters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,8 +14,9 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("DefaultConnection");
 
         services.AddDbContext<TaskManagerDbContext>(options =>
-            options.UseNpgsql(connectionString)); 
+            options.UseNpgsql(connectionString));
 
+        services.AddScoped<ITaskItemRepository, TaskItemRepository>();
 
         return services;
     }

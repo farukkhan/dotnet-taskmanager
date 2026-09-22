@@ -21,3 +21,7 @@ pricing-service.sln.DotSettings.user
 !/test/Adapters/Pricing.Service.Adapters.External.GoogleCloud.Tests.Integration/appsettings.development.json
 !/src/Pricing.Service.Functions.PriceRun.Sync/appsettings.development.json
 !/src/Pricing.Service.Functions.ProductPrice.Publisher/appsettings.development.json
+
+# Environment secrets
+.env
+*.env.local

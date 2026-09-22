@@ -9,6 +9,6 @@ internal class CreateTaskItemUseCase(ITaskItemRepository taskItemRepository) : I
 {
     public async Task<TaskItem> ExecuteAsync(CreateTaskItemCommand createTaskItemCommand, CancellationToken cancellationToken)
     {
-        return await taskItemRepository.CreateAsync(new TaskItem(createTaskItemCommand.Title, createTaskItemCommand.Description));
+        return await taskItemRepository.CreateAsync(new TaskItem(createTaskItemCommand.Title, createTaskItemCommand.Description), cancellationToken);
     }
 }

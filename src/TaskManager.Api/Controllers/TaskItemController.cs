@@ -41,7 +41,7 @@ public class TaskItemController(ICreateTaskItemUseCase createTaskItemUseCase,
         var taskItem = await createTaskItemUseCase.ExecuteAsync(new CreateTaskItemCommand(createTaskItemDto.Title, createTaskItemDto.Description)
             , CancellationToken.None);
 
-        return CreatedAtAction(nameof(GetAllTaskItemsAsync), new { id = taskItem.Id }, taskItem.ToCreatedTaskItemResponseDto());
+        return CreatedAtAction("GetTaskItemById", new { id = taskItem.Id }, taskItem.ToCreatedTaskItemResponseDto());
     }
 
     [HttpPut("{id}")]
@@ -52,6 +52,7 @@ public class TaskItemController(ICreateTaskItemUseCase createTaskItemUseCase,
 
         return Ok(taskItem.ToUpdatedTaskItemResponseDto());
     }
+
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> DeleteTaskItemAsync(int id)

@@ -8,6 +8,6 @@ internal class DeleteTaskItemUseCase(ITaskItemRepository taskItemRepository) : I
 {
     public async Task ExecuteAsync(DeleteTaskItemCommand deleteTaskItemCommand, CancellationToken cancellationToken)
     {
-        await taskItemRepository.DeleteByIdAsync(deleteTaskItemCommand.Id);
+        await taskItemRepository.DeleteByIdAsync(deleteTaskItemCommand.Id, cancellationToken);
     }
 }
