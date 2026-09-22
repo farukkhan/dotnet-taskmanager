@@ -1,0 +1,142 @@
+﻿@page "/tasks/create"
+@page "/tasks/edit/{Id:int}"
+
+@using Microsoft.AspNetCore.Components.Forms
+@using TaskManager.Web.Client.Models
+@using TaskManager.Web.Client.Services
+
+@inject TaskApiClient TaskApiClient
+@inject NavigationManager Navigation
+
+@rendermode InteractiveServer
+
+<PageTitle>@(IsEditMode ? "Edit Task" : "Create Task")</PageTitle>
+
+<h1>@(IsEditMode ? "Edit Task" : "Create Task")</h1>
+
+@if (IsLoading)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <EditForm Model="Task" OnValidSubmit="SaveAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Title</label>
+            <InputText class="form-control"
+                       @bind-Value="Task.Title" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <InputTextArea class="form-control"
+                           @bind-Value="Task.Description" />
+        </div>
+
+        @if (IsEditMode)
+        {
+            <div class="mb-3 form-check">
+                <InputCheckbox class="form-check-input"
+                               @bind-Value="Task.IsCompleted" />
+                <label class="form-check-label">
+                    Completed
+                </label>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div class="alert alert-danger">
+                @ErrorMessage
+            </div>
+        }
+
+        <button type="submit" class="btn btn-primary" disabled="@IsSaving">
+            @(IsSaving ? "Saving..." : "Save")
+        </button>
+
+        <button type="button"
+                class="btn btn-secondary ms-2"
+                @onclick="Cancel">
+            Cancel
+        </button>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    private TaskItem Task { get; set; } = new();
+
+    private bool IsLoading;
+    private bool IsSaving;
+    private string? ErrorMessage;
+
+    private bool IsEditMode => Id.HasValue;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!IsEditMode)
+            return;
+
+        IsLoading = true;
+
+        try
+        {
+            var task = await TaskApiClient.GetByIdAsync(Id!.Value);
+
+            if (task is null)
+            {
+                ErrorMessage = "Task not found.";
+                return;
+            }
+
+            Task = task;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        IsSaving = true;
+        ErrorMessage = null;
+
+        try
+        {
+            if (IsEditMode)
+            {
+                await TaskApiClient.UpdateAsync(Task);
+            }
+            else
+            {
+                await TaskApiClient.CreateAsync(Task);
+            }
+
+            Navigation.NavigateTo("/tasks");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/tasks");
+    }
+}

@@ -1,0 +1,79 @@
+﻿@rendermode InteractiveServer
+@using TaskManager.Web.Client.Models
+@using TaskManager.Web.Client.Services
+@page "/tasks"
+@inject TaskApiClient TaskApiClient
+
+<PageTitle>Tasks</PageTitle>
+
+<h1>Tasks</h1>
+
+<a href="/tasks/create">Create Task</a>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="alert alert-danger">
+        @ErrorMessage
+    </div>
+}
+
+@if (tasks is null)
+{
+    <p>Loading...</p>
+}
+else if (tasks.Count == 0)
+{
+    <p>No tasks found.</p>
+}
+else
+{
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var task in tasks)
+            {
+                <tr>
+                    <td>@task.Title</td>
+                    <td>@(task.IsCompleted ? "Completed" : "Open")</td>
+                    <td>
+                        <a href="/tasks/edit/@task.Id">Edit</a>
+                        <button class="btn btn-sm btn-danger ms-2" @onclick="() => DeleteAsync(task.Id)">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<TaskItem>? tasks;
+    private string? ErrorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ErrorMessage = string.Empty;
+        tasks = await TaskApiClient.GetAllAsync();
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        try
+        {
+            await TaskApiClient.DeleteAsync(id);
+            tasks = await TaskApiClient.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+}

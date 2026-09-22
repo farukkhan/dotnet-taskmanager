@@ -3,4 +3,6 @@
   <Project Path="src/Domain/Domain.csproj" Id="8417d234-4e45-42fd-bf03-4a828e1fa537" />
   <Project Path="src/Infrastructure/Infrastructure.csproj" Id="490a2a19-60f4-4111-ab84-f7a527dca3f6" />
   <Project Path="src/TaskManager.Api/TaskManager.Api.csproj" Id="591f4b0b-f59c-42be-a8a9-373a6f22a27c" />
+  <Project Path="src/TaskManager.Web/TaskManager.Web.Client/TaskManager.Web.Client.csproj" Id="4b6862b7-dcef-4b89-af32-2662ef2c260e" />
+  <Project Path="src/TaskManager.Web/TaskManager.Web/TaskManager.Web.csproj" Id="5021da6e-3620-4f01-abb3-c1186af69742" />
 </Solution>
