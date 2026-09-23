@@ -1,4 +1,6 @@
-﻿namespace Domain.Models;
+﻿using Domain.Exceptions;
+
+namespace Domain.Models;
 
 public class TaskItem
 {
@@ -43,7 +45,15 @@ public class TaskItem
     public DateTime? UpdatedAt { get; private set; }
     public int Version { get; private set; }
 
-    public void UpdateTitle(string title)
+    public void Update(string title, string? description, int expectedVersion)
+    {
+        EnsureVersion(expectedVersion);
+
+        UpdateTitle(title);
+        UpdateDescription(description);
+    }
+
+    private void UpdateTitle(string title)
     {
         ValidateTitle(title);
 
@@ -54,7 +64,7 @@ public class TaskItem
         }
     }
 
-    public void UpdateDescription(string? description)
+    private void UpdateDescription(string? description)
     {
         ValidateDescription(description);
 
@@ -96,6 +106,14 @@ public class TaskItem
         if (description is not null && description.Length > 2000)
         {
             throw new ArgumentException("Description must be less than or equal to 2000 characters.");
+        }
+    }
+
+    private void EnsureVersion(int expectedVersion)
+    {
+        if (expectedVersion != Version)
+        {
+            throw new VersionConflictException(nameof(TaskItem), Id, expectedVersion, Version);
         }
     }
 

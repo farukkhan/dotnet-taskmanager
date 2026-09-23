@@ -17,8 +17,7 @@ public class UpdateTaskItemUseCase(ITaskItemRepository taskItemRepository) : IUp
             throw new NotFoundException($"Task with id {updateTaskItemCommand.Id} is not found.");
         }
 
-        existingTaskItem.UpdateTitle(updateTaskItemCommand.Title);
-        existingTaskItem.UpdateDescription(updateTaskItemCommand.Description);
+        existingTaskItem.Update(updateTaskItemCommand.Title, updateTaskItemCommand.Description, updateTaskItemCommand.Version);
 
         return await taskItemRepository.UpdateAsync(existingTaskItem, cancellationToken);
     }
