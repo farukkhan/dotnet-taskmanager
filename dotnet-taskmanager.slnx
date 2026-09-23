@@ -5,4 +5,5 @@
   <Project Path="src/TaskManager.Api/TaskManager.Api.csproj" Id="591f4b0b-f59c-42be-a8a9-373a6f22a27c" />
   <Project Path="src/TaskManager.Web/TaskManager.Web.Client/TaskManager.Web.Client.csproj" Id="4b6862b7-dcef-4b89-af32-2662ef2c260e" />
   <Project Path="src/TaskManager.Web/TaskManager.Web/TaskManager.Web.csproj" Id="5021da6e-3620-4f01-abb3-c1186af69742" />
+  <Project Path="tests/Domain.Tests/Domain.Tests.csproj" Id="abf6f620-07c9-4b61-828e-a70e151af967" />
 </Solution>
