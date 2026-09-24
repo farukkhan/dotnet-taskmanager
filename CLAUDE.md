@@ -88,11 +88,12 @@ Add new projects to `dotnet-taskmanager.slnx` as flat `<Project Path="..." Id=".
 
 ## Testing
 
-Tests use **xUnit** and live under `tests/`. The layout is `tests/Domain.Tests`, `tests/Application.Tests` and `tests/TaskManager.Api.IntegrationTests`. Check which of them already exist before adding tests.
+Tests use **xUnit** and live under `tests/`. The layout is `tests/Domain.Tests`, `tests/Application.Tests`, `tests/TaskManager.Api.Tests` and `tests/TaskManager.Api.IntegrationTests`. Check which of them already exist before adding tests.
 
 - Before creating a new test project, confirm it with the developer and add it to the solution as described in *Solution layout*.
 - Domain tests: pure unit tests of invariants and state transitions.
 - Application tests: use cases against a fake or mocked `ITaskItemRepository`.
+- API tests: the HTTP pipeline (routing, status codes, `ProblemDetails`) through `WebApplicationFactory`, with use cases stubbed. No database.
 - Integration tests: API and EF Core against real PostgreSQL. Discuss the options (e.g. Testcontainers vs. the Docker Compose DB) before choosing. Prefer not to use the EF InMemory provider for behaviour that depends on the database.
 - Name tests `MethodOrScenario_Condition_ExpectedResult`.
 - After implementing, run the relevant tests and report the real results, including failures.

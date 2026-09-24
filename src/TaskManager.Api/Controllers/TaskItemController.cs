@@ -31,7 +31,9 @@ public class TaskItemController(ICreateTaskItemUseCase createTaskItemUseCase,
     {
         var taskItem = await getTaskItemUseCase.ExecuteAsync(new GetTaskItemQuery(id), cancellationToken);
 
-        return taskItem is null ? NotFound($"Task with id:{id} is not found.") : Ok(taskItem.ToGetTaskItemResponseDto());
+        return taskItem is null
+            ? Problem(detail: $"Task with id:{id} is not found.", statusCode: StatusCodes.Status404NotFound)
+            : Ok(taskItem.ToGetTaskItemResponseDto());
     }
 
     [HttpPost]
@@ -46,6 +48,8 @@ public class TaskItemController(ICreateTaskItemUseCase createTaskItemUseCase,
 
     [HttpPut("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpdateTaskItemAsync(int id, UpdateTaskItemDto updateTaskItemDto)
     {
         var taskItem = await updateTaskItemUseCase.ExecuteAsync(new UpdateTaskItemCommand(id, updateTaskItemDto.Title, updateTaskItemDto.Description, updateTaskItemDto.Version), CancellationToken.None);
@@ -55,6 +59,7 @@ public class TaskItemController(ICreateTaskItemUseCase createTaskItemUseCase,
 
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteTaskItemAsync(int id)
     {
         await deleteTaskItemUseCase.ExecuteAsync(new DeleteTaskItemCommand(id), CancellationToken.None);
