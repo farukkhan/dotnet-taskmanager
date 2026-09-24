@@ -47,8 +47,8 @@ Errors are signalled by throwing exceptions from Domain, Application or Infrastr
 | `NotFoundException` | Application: use cases, repository | 404 Not Found |
 | `VersionConflictException` | Domain: `TaskItem` version check | 409 Conflict |
 | `ConcurrencyException` | Application: repository (stored version mismatch, `DbUpdateConcurrencyException`) | 409 Conflict |
-| `ArgumentException` | Domain: invariant validation in `TaskItem` | 400 Bad Request *(to be confirmed in PREP-9)* |
-| anything else | n/a | 500, with no stack trace outside Development |
+| `ArgumentException` | Domain: invariant validation in `TaskItem` | 500 for now. PREP-11 replaces it with a domain-specific exception → 400 |
+| anything else | n/a | 500 with a generic `ProblemDetails` body and no exception details |
 
 - **Don't catch exceptions in controllers** to turn them into status codes. Map them only in the central handler.
 - Domain and Application never reference HTTP types or status codes.
@@ -58,9 +58,10 @@ Errors are signalled by throwing exceptions from Domain, Application or Infrastr
 - Don't return `null`, `bool` or result types to signal errors from use cases. The one existing exception: get-by-id returns `null`, and the controller turns that into `404`.
 - When you add a new exception type, add it to this table and to the central mapping, and add a test for it.
 
-**Current state:** the central mapping doesn't exist yet (Jira **PREP-9**), so every exception currently returns 500. Don't work around this with `try/catch` in controllers. Either implement PREP-9 or leave the behaviour as it is.
+**Where the mapping lives:** `ExceptionHandling/ApiExceptionHandler.cs` (an `IExceptionHandler`), registered in `Program.cs` together with `AddProblemDetails()` and `app.UseExceptionHandler()`. Add new mappings there. Exceptions it doesn't recognise fall through to the default handler, which returns a generic 500. The tests are in `tests/TaskManager.Api.Tests/ExceptionHandling`.
 
 ## Testing API behaviour
 
-- Test status codes and `ProblemDetails` bodies with integration tests (`WebApplicationFactory`) in `tests/TaskManager.Api.IntegrationTests`, against real PostgreSQL. See *Testing* in `CLAUDE.md`.
+- Test status codes and `ProblemDetails` bodies in `tests/TaskManager.Api.Tests`. These tests run the real HTTP pipeline through `WebApplicationFactory` (`TaskManagerApiFactory`, Production environment) and replace use cases with stubs using `ConfigureTestServices`. They need no database.
+- Behaviour that depends on the database, such as a real concurrent update, belongs in `tests/TaskManager.Api.IntegrationTests` against real PostgreSQL. See *Testing* in `CLAUDE.md`.
 - Test mapping and HTTP logic at the API level. Test domain rules in `Domain.Tests`, not through HTTP.
