@@ -23,63 +23,71 @@ public class ExceptionHandlingTests(TaskManagerApiFactory factory) : IClassFixtu
     [Fact]
     public async Task GetById_WhenTaskDoesNotExist_Returns404ProblemDetails()
     {
+        var taskId = 42;
         var client = CreateClient(services => services.AddScoped<IGetTaskItemUseCase, NotFoundGetTaskItemUseCase>());
 
-        var response = await client.GetAsync("/api/TaskItem/42");
+        var response = await client.GetAsync($"/api/TaskItem/{taskId}");
 
         var problem = await AssertProblemDetailsAsync(response, HttpStatusCode.NotFound);
-        Assert.Equal("Task with id:42 is not found.", problem.Detail);
+        Assert.Equal($"Task with id:{taskId} is not found.", problem.Detail);
     }
 
     [Fact]
     public async Task Put_WhenUseCaseThrowsNotFound_Returns404ProblemDetails()
     {
-        var client = CreateClientWithThrowingUpdate(new NotFoundException("Task with id 42 is not found."));
+        var taskId = 42;
+        var client = CreateClientWithThrowingUpdate(new NotFoundException($"Task with id {taskId} is not found."));
 
-        var response = await client.PutAsJsonAsync("/api/TaskItem/42", ValidUpdateRequest);
+        var response = await client.PutAsJsonAsync($"/api/TaskItem/{taskId}", ValidUpdateRequest);
 
         var problem = await AssertProblemDetailsAsync(response, HttpStatusCode.NotFound);
-        Assert.Equal("Task with id 42 is not found.", problem.Detail);
+        Assert.Equal($"Task with id {taskId} is not found.", problem.Detail);
     }
 
     [Fact]
     public async Task Delete_WhenUseCaseThrowsNotFound_Returns404ProblemDetails()
     {
+        var taskId = 42;
         var client = CreateClient(services =>
-            services.AddScoped<IDeleteTaskItemUseCase>(_ => new ThrowingDeleteTaskItemUseCase(new NotFoundException("Task with Id 42 was not found."))));
+            services.AddScoped<IDeleteTaskItemUseCase>(_ => new ThrowingDeleteTaskItemUseCase(new NotFoundException($"Task with Id {taskId} was not found."))));
 
-        var response = await client.DeleteAsync("/api/TaskItem/42");
+        var response = await client.DeleteAsync($"/api/TaskItem/{taskId}");
 
-        await AssertProblemDetailsAsync(response, HttpStatusCode.NotFound);
+        var problem = await AssertProblemDetailsAsync(response, HttpStatusCode.NotFound);
+        Assert.Equal($"Task with Id {taskId} was not found.", problem.Detail);
     }
 
     [Fact]
     public async Task Put_WhenVersionConflict_Returns409ProblemDetails()
     {
-        var client = CreateClientWithThrowingUpdate(new VersionConflictException(nameof(TaskItem), 42, 1, 2));
+        var taskId = 42;
+        var client = CreateClientWithThrowingUpdate(new VersionConflictException(nameof(TaskItem), taskId, 1, 2));
 
-        var response = await client.PutAsJsonAsync("/api/TaskItem/42", ValidUpdateRequest);
+        var response = await client.PutAsJsonAsync($"/api/TaskItem/{taskId}", ValidUpdateRequest);
 
         var problem = await AssertProblemDetailsAsync(response, HttpStatusCode.Conflict);
-        Assert.Contains("modified by another user", problem.Detail);
+        Assert.Contains($"Id {taskId} was modified by another user", problem.Detail);
     }
 
     [Fact]
     public async Task Put_WhenConcurrencyException_Returns409ProblemDetails()
     {
-        var client = CreateClientWithThrowingUpdate(new ConcurrencyException("Task with Id 42 was modified by another user."));
+        var taskId = 42;
+        var client = CreateClientWithThrowingUpdate(new ConcurrencyException($"Task with Id {taskId} was modified by another user."));
 
-        var response = await client.PutAsJsonAsync("/api/TaskItem/42", ValidUpdateRequest);
+        var response = await client.PutAsJsonAsync($"/api/TaskItem/{taskId}", ValidUpdateRequest);
 
-        await AssertProblemDetailsAsync(response, HttpStatusCode.Conflict);
+        var problem = await AssertProblemDetailsAsync(response, HttpStatusCode.Conflict);
+        Assert.Equal($"Task with Id {taskId} was modified by another user.", problem.Detail);
     }
 
     [Fact]
     public async Task Put_WhenUnexpectedException_Returns500WithoutExceptionDetails()
     {
+        var taskId = 42;
         var client = CreateClientWithThrowingUpdate(new InvalidOperationException("Sensitive internal detail"));
 
-        var response = await client.PutAsJsonAsync("/api/TaskItem/42", ValidUpdateRequest);
+        var response = await client.PutAsJsonAsync($"/api/TaskItem/{taskId}", ValidUpdateRequest);
 
         var body = await response.Content.ReadAsStringAsync();
         await AssertProblemDetailsAsync(response, HttpStatusCode.InternalServerError);
