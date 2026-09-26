@@ -56,11 +56,35 @@ public class TaskItemTests
     }
 
     [Fact]
-    public void Update_WithInvalidDescription_ThrowsArgumentException()
+    public void Update_WithInvalidDescription_ThrowsDomainValidationException()
     {
         var taskItem = LoadTaskItem();
 
-        Assert.Throws<ArgumentException>(
-            () => taskItem.Update("New title", new string('x', 2001), CurrentVersion));
+        Assert.Throws<DomainValidationException>(
+            () => taskItem.Update("New title", new string('x', TaskItem.DescriptionMaxLength + 1), CurrentVersion));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(null)]
+    public void Constructor_WithEmptyTitle_ThrowsDomainValidationException(string? title)
+    {
+        Assert.Throws<DomainValidationException>(() => new TaskItem(title!, "Description"));
+    }
+
+    [Fact]
+    public void Constructor_WithTooLongTitle_ThrowsDomainValidationException()
+    {
+        Assert.Throws<DomainValidationException>(
+            () => new TaskItem(new string('x', TaskItem.TitleMaxLength + 1), "Description"));
+    }
+
+    [Fact]
+    public void Constructor_WithMaxLengthTitleAndDescription_CreatesTask()
+    {
+        var taskItem = new TaskItem(new string('x', TaskItem.TitleMaxLength), new string('y', TaskItem.DescriptionMaxLength));
+
+        Assert.Equal(TaskItem.TitleMaxLength, taskItem.Title.Length);
+        Assert.Equal(TaskItem.DescriptionMaxLength, taskItem.Description!.Length);
     }
 }

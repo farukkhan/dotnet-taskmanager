@@ -15,6 +15,7 @@ internal class ApiExceptionHandler(IProblemDetailsService problemDetailsService)
     {
         int? statusCode = exception switch
         {
+            DomainValidationException => StatusCodes.Status400BadRequest,
             NotFoundException => StatusCodes.Status404NotFound,
             VersionConflictException or ConcurrencyException => StatusCodes.Status409Conflict,
             _ => null

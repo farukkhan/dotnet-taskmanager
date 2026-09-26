@@ -30,6 +30,7 @@ These rules apply to `src/TaskManager.Api` and to the exceptions it passes on to
 
 - Request DTOs go in `Dtos/Request` (`<Action><Resource>Dto`, e.g. `UpdateTaskItemDto`) and response DTOs in `Dtos/Response`. Follow the existing style: classes with `get; set;` properties.
 - Never return domain models (`TaskItem`) or persistence entities (`TaskItemEntity`) from an action.
+- Validate request DTOs with DataAnnotations (`[Required]`, `[StringLength]`). `[ApiController]` then returns 400 `ValidationProblemDetails` before the use case runs. Take the limits from the domain constants (e.g. `TaskItem.TitleMaxLength`) and never repeat the numbers. DTO validation is the first check; the domain still enforces the rules.
 - Map domain objects to response DTOs with extension methods in `Mappers/Response/ResponseMapper.cs` (`To<Name>ResponseDto()`). The controller builds commands and queries inline from request DTOs. No AutoMapper.
 
 ## Optimistic concurrency in the API
@@ -47,8 +48,10 @@ Errors are signalled by throwing exceptions from Domain, Application or Infrastr
 | `NotFoundException` | Application: use cases, repository | 404 Not Found |
 | `VersionConflictException` | Domain: `TaskItem` version check | 409 Conflict |
 | `ConcurrencyException` | Application: repository (stored version mismatch, `DbUpdateConcurrencyException`) | 409 Conflict |
-| `ArgumentException` | Domain: invariant validation in `TaskItem` | 500 for now. PREP-11 replaces it with a domain-specific exception → 400 |
-| anything else | n/a | 500 with a generic `ProblemDetails` body and no exception details |
+| `DomainValidationException` | Domain: invariant validation in `TaskItem` | 400 Bad Request |
+| anything else, including `ArgumentException` | n/a | 500 with a generic `ProblemDetails` body and no exception details |
+
+- Domain rules throw `DomainValidationException`, **never** `ArgumentException`. Framework code also throws `ArgumentException` for server-side bugs, so it must stay a 500.
 
 - **Don't catch exceptions in controllers** to turn them into status codes. Map them only in the central handler.
 - Domain and Application never reference HTTP types or status codes.
