@@ -4,6 +4,7 @@ paths:
   - "src/Application/UseCases/**"
   - "src/Application/Exceptions/**"
   - "src/Domain/Exceptions/**"
+  - "tests/TaskManager.Api.Tests/**"
 ---
 
 # API architecture and error-handling rules

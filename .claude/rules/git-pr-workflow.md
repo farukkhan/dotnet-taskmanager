@@ -1,7 +1,7 @@
 # PR Workflow
 
-- Split large Jira tasks into focused PRs.
-- Each PR must contain <=10 changed files.
+When a Jira issue needs more than one PR (see the 10-file limit in `CLAUDE.md`), stack them:
+
 - PR1 targets master.
 - PR2 targets PR1's branch.
 - PR3 targets PR2's branch.

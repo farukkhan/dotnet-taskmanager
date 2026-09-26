@@ -3,6 +3,11 @@
     "allow": [
       "Bash(dotnet test dotnet-taskmanager.slnx *)",
       "Bash(dotnet build dotnet-taskmanager.slnx *)"
+    ],
+    "ask": [
+      "Bash(dotnet ef database update*)",
+      "Bash(docker volume rm*)",
+      "Bash(docker compose down -v*)"
     ]
   }
 }
